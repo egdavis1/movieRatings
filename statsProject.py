@@ -11,11 +11,22 @@ def outputMath(mean, stdDev, mathFile):
 
 def doMath(ratings, mathFile):
   stdDev = 0
-  mean = sum(ratings)/float(len(ratings))
+  sumNum = 0
+  totalRatings = 0
+  for num in ratings:
+    if num != '':
+      sumNum += num
+      totalRatings+= 1
+
+  mean = sumNum/float(totalRatings)
 
   for num in ratings:
-    stdDev += pow((num - mean), 2)    
-  stdDev = math.sqrt(stdDev/(float(len(ratings))-1))
+    if num != '':
+      stdDev += pow((num - mean), 2)
+  if (totalRatings - 1) > 0:
+    stdDev = math.sqrt(stdDev/(float(totalRatings)-1))
+  else:
+    stdDev = 'N/A'
 
   outputMath(mean, stdDev, mathFile)
 
@@ -32,7 +43,7 @@ def printRatingsToFile(ratings, fileName):
       fileRatings.write(str(rating))
       fileRatings.write('\n')
 
-def startProgram(url, apiKey, fileName, outputFile, mathFile):
+def startProgram(url, apiKey, fileName, outputFile, extraFile, mathFile):
   movieTitle = []
   ratings = []
   getMovieTitle(movieTitle, fileName)
@@ -53,8 +64,9 @@ def startProgram(url, apiKey, fileName, outputFile, mathFile):
     try:
       ratings.append(data[0]['results'][0]['vote_average'])
     except:
-      with open('newExtraTitles', 'a+') as file:
+      with open(extraFile, 'a+') as file:
         file.write(urllib.unquote(title) + '\n')
+      ratings.append('')
 
 #  print(ratings)
 
@@ -67,6 +79,7 @@ if __name__ == '__main__':
   parser.add_argument('-k', '--api_key', help = 'api needed for api call')
   parser.add_argument('-f', '--file_name', help = 'name of file with movie titles in it')
   parser.add_argument('-o', '--output_file', help = 'name of the output file for ratings')
+  parser.add_argument('-e', '--extra_file', help = 'name of the output file that will contain movie titles that were not found in the database')
   parser.add_argument('-m', '--math_file', help = 'name of output file containing math calculations, optional. Will use outputFile (-o) instead if not entered)')
   args = parser.parse_args()
 
@@ -74,10 +87,11 @@ if __name__ == '__main__':
   api_key = args.api_key
   file_name = args.file_name
   output_file = args.output_file
+  extra_file = args.extra_file
 
   if args.math_file:
     math_file = args.math_file
   else:
     math_file = output_file
 
-startProgram(url, api_key, file_name, output_file, math_file)
+startProgram(url, api_key, file_name, output_file, extra_file, math_file)
